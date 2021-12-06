@@ -21,7 +21,7 @@ func main() {
 		procfsPath    = kingpin.Flag("lock.procfsPath", "Path to procfs filesystem.").Default("/proc").String()
 		crioSocket    = kingpin.Flag("lock.crioSocket", "Path to cri-o socket.").Default("/var/run/crio/crio.sock").String()
 		logLevel      = kingpin.Flag("log.level", "Log level.").Default("info").String()
-		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":3000").String()
+		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9102").String()
 		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 	)
 	kingpin.HelpFlag.Short('h')
