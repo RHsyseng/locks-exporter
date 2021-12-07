@@ -9,9 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"gopkg.in/alecthomas/kingpin.v2"
-	pb "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
 var version = "develop"
@@ -19,7 +17,6 @@ var version = "develop"
 func main() {
 	var (
 		procfsPath    = kingpin.Flag("lock.procfsPath", "Path to procfs filesystem.").Default("/proc").String()
-		crioSocket    = kingpin.Flag("lock.crioSocket", "Path to cri-o socket.").Default("/var/run/crio/crio.sock").String()
 		logLevel      = kingpin.Flag("log.level", "Log level.").Default("info").String()
 		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9102").String()
 		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
@@ -37,15 +34,13 @@ func main() {
 	logger := logrus.New()
 	logger.SetLevel(level)
 
-	// we must use insecure since there is no auth outside of filesystem permissions here
-	cc, err := grpc.Dial("unix:///"+*crioSocket, grpc.WithInsecure())
+	coll, err := collector.New(logger, *procfsPath)
 	if err != nil {
-		logger.Fatalf("Failed to connect to crio: %s", err)
+		log.Fatalf("Unable to read procfs: %s", err)
 	}
-
 	// use a blank registry to remove the default collectors for Go and promhttp
 	reg := prometheus.NewRegistry()
-	reg.MustRegister(collector.New(logger, *procfsPath, pb.NewRuntimeServiceClient(cc)))
+	reg.MustRegister(coll)
 
 	http.Handle(*metricsPath, promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	// serve a friendly page at index with a link to the proper metrics endpoint

@@ -35,7 +35,7 @@ func (c *Collector) getLocks() (map[int]int, error) {
 	return locks, nil
 }
 
-func (c *Collector) findContainer(pid int) string {
+func (c *Collector) findContainerId(pid int) string {
 	// find the cgroup from the /proc/<pid>/cgroup file
 	file, err := os.ReadFile(fmt.Sprintf("%s/%d/cgroup", c.procfsPath, pid))
 	if err != nil {
