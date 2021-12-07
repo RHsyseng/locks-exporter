@@ -8,7 +8,7 @@ import (
 
 const Namespace = "locks"
 
-// interface test
+// interface guard
 var _ prometheus.Collector = (*Collector)(nil)
 
 // Exporter collects metrics from a local Raspberry Pi
@@ -28,7 +28,7 @@ func New(logger *logrus.Logger, procfsPath string) (*Collector, error) {
 		procfsPath: procfsPath,
 		fs:         fs,
 		containerFileLocks: prometheus.NewDesc(
-			prometheus.BuildFQName(Namespace, "pod", "file_locks"),
+			prometheus.BuildFQName(Namespace, "container", "file_locks"),
 			"Number of file locks held by processes in container",
 			[]string{"namespace", "pod", "container"},
 			nil,
