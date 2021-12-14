@@ -75,7 +75,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// now that we have lock counts per container id, we will annotate them
 	// with metadata (pod name, container name, namespace)
 	for cId, count := range containers {
-		meta := containerMeta[cId]
+		meta, ok := containerMeta[cId]
+		if !ok {
+			c.logger.Debugf("No metadata present for container: %s", cId)
+			continue
+		}
 		ch <- prometheus.MustNewConstMetric(
 			c.containerFileLocks,
 			prometheus.GaugeValue,
