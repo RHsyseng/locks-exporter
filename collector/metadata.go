@@ -17,24 +17,24 @@ const nameArg = "-n"
 // container name matches k8s_<container_name>_<pod_name>_<namespace>_***
 var namePattern = regexp.MustCompile(`^k8s_([^_]+)_([^_]+)_([^_]+)_`)
 
-func (c *Collector) getContainerMetadata(pid int) container {
+func (c *Collector) getContainerMetadata(pid int) *container {
 	proc, err := c.fs.Proc(pid)
 	if err != nil {
 		c.logger.Warnf("Failed to retrieve pid from procfs: %s", err)
-		return container{}
+		return nil
 	}
 	// get parent proc running conmon
 	parent, err := c.getParent(proc)
 	if err != nil {
 		c.logger.Warnf("Failed to find parent from procfs: %s", err)
-		return container{}
+		return nil
 	}
 
 	// get full command line of conmon proc
 	cmd, err := parent.CmdLine()
 	if err != nil {
 		c.logger.Warnf("Failed to find command line from procfs: %s", err)
-		return container{}
+		return nil
 	}
 
 	// extract the "name" argument and get the container metadata
@@ -43,7 +43,7 @@ func (c *Collector) getContainerMetadata(pid int) container {
 			// the "name" value will come immediately after "-n"
 			match := namePattern.FindStringSubmatch(cmd[i+1])
 			if match != nil {
-				return container{
+				return &container{
 					containerName: match[1],
 					podName:       match[2],
 					namespace:     match[3],
@@ -52,8 +52,8 @@ func (c *Collector) getContainerMetadata(pid int) container {
 		}
 	}
 
-	// bar all else, we return empty data
-	return container{}
+	// bar all else, we return nil
+	return nil
 }
 
 func (c *Collector) getParent(p procfs.Proc) (procfs.Proc, error) {

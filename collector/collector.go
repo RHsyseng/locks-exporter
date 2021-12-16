@@ -66,7 +66,9 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		// populate metadata map if it doesn't already exist
 		if _, ok := containerMeta[container]; !ok {
 			meta := c.getContainerMetadata(pid)
-			containerMeta[container] = meta
+			if meta != nil {
+				containerMeta[container] = *meta
+			}
 		}
 		containers[container] += count
 	}
