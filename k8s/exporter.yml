@@ -48,7 +48,7 @@ spec:
       serviceAccountName: locks-exporter
       containers:
       - name: locks-exporter
-        image: quay.io/patrickeasters/locks-exporter
+        image: quay.io/rhsysdeseng/locks-exporter
         resources:
           limits:
             memory: 100Mi
