@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: locks-exporter
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: locks-exporter-hostaccess
+rules:
+- apiGroups:
+  - security.openshift.io 
+  resourceNames:
+  - hostaccess
+  resources:
+  - securitycontextconstraints 
+  verbs: 
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: locks-exporter-hostaccess
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: locks-exporter-hostaccess
+subjects:
+- kind: ServiceAccount
+  name: locks-exporter
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: locks-exporter
+spec:
+  selector:
+    matchLabels:
+      name: locks-exporter
+  template:
+    metadata:
+      labels:
+        name: locks-exporter
+        collector: rhsyseng-locks-exporter
+    spec:
+      hostPID: true
+      serviceAccountName: locks-exporter
+      containers:
+      - name: locks-exporter
+        image: quay.io/rhsysdeseng/locks-exporter
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 30Mi
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: locks-exporter
+spec:
+  selector:
+    matchLabels:
+      collector: rhsyseng-locks-exporter
+  podMetricsEndpoints:
+  - path: /metrics
+    port: metrics
