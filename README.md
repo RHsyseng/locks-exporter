@@ -48,7 +48,13 @@ daemonset.apps/locks-exporter created
 podmonitor.monitoring.coreos.com/locks-exporter created
 ```
 
-3. If using the OpenShift monitoring stack, check to ensure [monitoring for user-defined projects](https://docs.openshift.com/container-platform/4.9/monitoring/enabling-monitoring-for-user-defined-projects.html) is enabled.
+3. To optionally gather lock metrics from master nodes, the locks-exporter DaemonSet can be patched to allow scheduling the exporter on master nodes.
+```
+$ oc patch ds locks-exporter -p '{"spec": {"template": {"spec": {"tolerations": [{"effect": "NoSchedule","key": "node-role.kubernetes.io/master","operator": "Exists"}]}}}}'
+daemonset.apps/locks-exporter patched
+```
+
+4. If using the OpenShift monitoring stack, check to ensure [monitoring for user-defined projects](https://docs.openshift.com/container-platform/4.9/monitoring/enabling-monitoring-for-user-defined-projects.html) is enabled.
 ```
 $ oc describe cm cluster-monitoring-config -n openshift-monitoring
 Name:         cluster-monitoring-config
@@ -63,4 +69,4 @@ config.yaml:
 enableUserWorkload: true
 ```
 
-4. You should now be able to query Prometheus for the `locks_container_file_locks` metric.
+5. You should now be able to query for the `locks_container_file_locks` metric via the OpenShift console or from outside the cluster via [Thanos querier](https://docs.openshift.com/container-platform/4.9/monitoring/enabling-monitoring-for-user-defined-projects.html#accessing-metrics-from-outside-cluster_enabling-monitoring-for-user-defined-projects).
